@@ -38,13 +38,12 @@ class Linear(nn.Module):
     x: shape (*, in_features)
     Return: shape (*, out_features)
     """
-    print(self.weight.shape)
+
 
     y = x @ self.weight.T
     if self.bias != None:
       y += self.bias
-      print(self.bias.shape)
-    print(y.shape)
+
     return y
 
   def extra_repr(self) -> str:

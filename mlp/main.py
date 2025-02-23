@@ -1,26 +1,10 @@
-import json
-import sys
-from collections import namedtuple
-from dataclasses import dataclass
+from pathlib import Path
+from torch.utils.data import Subset
+from torchvision import datasets, transforms
 from pathlib import Path
 
-import einops
-import numpy as np
-import torch as t
-import torch.nn as nn
-import torch.nn.functional as F
-import torchinfo
-from IPython.display import display
-from jaxtyping import Float, Int
-from PIL import Image
-from rich import print as rprint
-from rich.table import Table
-from torch import Tensor
-from torch.utils.data import DataLoader, Subset
-from torchvision import datasets, models, transforms
-from tqdm.notebook import tqdm
-import os
-from pathlib import Path
+from model import SimpleMLP
+from train import SimpleMLPTrainingArgs, train
 
 mlp_dir = Path("mlp")
 
@@ -30,7 +14,6 @@ MNIST_TRANSFORM = transforms.Compose(
     transforms.Normalize(0.1307, 0.3081),
   ]
 )
-
 
 def get_mnist(trainset_size: int = 10_000, testset_size: int = 1_000) -> tuple[Subset, Subset]:
   """Returns a subset of MNIST training data."""
@@ -46,19 +29,11 @@ def get_mnist(trainset_size: int = 10_000, testset_size: int = 1_000) -> tuple[S
   return mnist_trainset, mnist_testset
 
 
+model = SimpleMLP()
 mnist_trainset, mnist_testset = get_mnist()
-mnist_trainloader = DataLoader(mnist_trainset, batch_size=64, shuffle=True)
-mnist_testloader = DataLoader(mnist_testset, batch_size=64, shuffle=False)
 
-# Get the first batch of test data, by starting to iterate over `mnist_testloader`
-for img_batch, label_batch in mnist_testloader:
-  print(f"{img_batch.shape=}\n{label_batch.shape=}\n")
-  break
+args = SimpleMLPTrainingArgs(train_set=mnist_trainset, test_set=mnist_testset)
 
-# Get the first datapoint in the test set, by starting to iterate over `mnist_testset`
-for img, label in mnist_testset:
-  print(f"{img.shape=}\n{label=}\n")
-  break
+loss_list, accuracy_list, model = train(model, args)
 
-t.testing.assert_close(img, img_batch[0])
-assert label == label_batch[0].item()
+print(f"Accuracy: {accuracy_list}")
