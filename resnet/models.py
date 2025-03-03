@@ -138,7 +138,7 @@ class ResNet34(nn.Module):
     # Load in this dictionary to your model
     self.load_state_dict(state_dict_to_load)
 
-def get_resnet_for_feature_extraction(n_classes: int, device: t.device) -> ResNet34:
+def get_resnet_for_feature_extraction(n_classes: int, device: t.device, freeze: bool = True) -> ResNet34:
   """
   Creates a ResNet34 instance, replaces its final linear layer with a classifier for `n_classes` classes, and freezes
   all weights except the ones in this layer.
@@ -151,10 +151,11 @@ def get_resnet_for_feature_extraction(n_classes: int, device: t.device) -> ResNe
   my_resnet.copy_weights(pretrained_resnet)
 
   print("Weights copied successfully!")
+  
+  if freeze:
+    # Freeze conv base
+    my_resnet.requires_grad_(False)
 
-  # Freeze conv base
-  my_resnet.requires_grad_(False)
-
-  my_resnet.out_layers[-1] = Linear(my_resnet.out_features_per_group[-1], n_classes)
+    my_resnet.out_layers[-1] = Linear(my_resnet.out_features_per_group[-1], n_classes)
 
   return my_resnet
